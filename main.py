@@ -1,20 +1,26 @@
 from graphviz import Digraph
 import controllerFunction as cF
 from tkinter import *
+import tkinter as tk
 from clases import transicion, estado
+from tkinter import messagebox, filedialog
+from PIL import Image, ImageTk
+import os
 
 dot = Digraph(comment='AFD')
 cFI = cF.controllerFunction()
 con = ''
-
+estados = []
 
 def crearAutomata():
-    estados = []
-    con = ''
+    #estados = []
+    #con = ''
 
-    print('Primero declararemos los estados')
-    while con.lower() != 'no':
-        x = (input('Nombre/s estado/s: ')).replace(' ', '')
+    #print('Primero declararemos los estados')
+
+    #while con.lower() != 'no':
+    x = estado_entry.get().replace(' ', '')
+    if x:
         if len(x) > 3:
             lsX = []
             if '-' in x:
@@ -24,38 +30,57 @@ def crearAutomata():
             elif '/' in x:
                 lsX = x.split('/')
             else:
-                print('Ingrese un formato de separacion acceptable (/ , -)')
+                messagebox.showwarning('Formato incorrecto', 'Ingrese un formato de separación aceptable (/ , -)')
+                return  # Sale si el formato no es válido
 
-            for i in range(0,len(lsX)):
-                estadoTemp = estado(lsX[i], False)
-                estados.append(estadoTemp)
-        else:
-            estados.append(estado(x, False))
+            for i in range(len(lsX)):
+                # Verificar si el estado ya está en la lista 'estados'
+                if lsX[i] in [estado.nombreEstado for estado in estados]:
+                    messagebox.showwarning('Estado existente', f'El estado {lsX[i]} ya ha sido ingresado')
+                else:
+                    # Agregar el estado a la lista y al listbox
+                    estadoTemp = estado(lsX[i], False)
+                    estados.append(estadoTemp)
+                    estado_listbox.insert(END, lsX[i])
+                    estadoDeAceptacionUnico(estadoTemp)
+            estado_entry.delete(0, END)  # Limpiar la entrada
 
-        con = input('Desea agregar otro estado? (Si/No)')
-    print('Cual de estos es un estado de aceptacion?: ')
-    v = ''
-    for es in range(len(estados)):
-        if es == len(estados) -1:
-            v+= estados[es].nombreEstado
         else:
-            v += estados[es].nombreEstado+', '
-    print(v)
-    qS = input('-> ')
-    for x in estados:
-        if qS == x.nombreEstado:
-            x.isAceptacion = True
-            break
+            # Verificar si el estado corto ya está en la lista
+            if x in [estado.nombreEstado for estado in estados]:
+                messagebox.showwarning('Estado existente', f'El estado {x} ya ha sido ingresado')
+            else:
+                estadoNuevo = estado(x, False)
+                estados.append(estadoNuevo)
+                estado_listbox.insert(END, x)
+                estado_entry.delete(0, END)  # Limpiar la entrada
+                estadoDeAceptacionUnico(estadoNuevo)
+
+
+    else:
+        messagebox.showwarning("Campo vacío", "Ingrese un nombre de estado.")
+
+        #con = input('Desea agregar otro estado? (Si/No)')
 
 
     # Cargar los estados ingresados en el autómata
     cargarEstadosAutomata(estados)
 
-    llamarImagen()
+    #llamarImagen()
 
     # Ingresamos las transiciones entre estados
-    indicarRelaciones()
+    #indicarRelaciones()
 
+
+def estadoDeAceptacionUnico(estadoAc: estado):
+    isAceptacion = bool(var.get())
+    if isAceptacion:
+        etiqueta.config(text=f"El estado {estadoAc.nombreEstado} es un estado de aceptacion")
+        for i in range(len(estados)):
+            if estadoAc.nombreEstado == estados[i].nombreEstado:
+                estados[i].isAceptacion = True
+    else:
+        etiqueta.config(text="No se ha elegido ningun estado de aceptacion")
 # Función que agrega los estados al autómata
 def cargarEstadosAutomata(estados: list):
     for estado in estados:
@@ -138,7 +163,7 @@ def llamarImagen():
     cFI.mostrarImagen()
 
 
-
+"""
 # Bucle principal
 while con.lower() != 'no':
     print('Seleccione una opción: ')
@@ -152,6 +177,7 @@ while con.lower() != 'no':
         exit()
     else:
         print("Opción no válida. Intente nuevamente.")
+"""
 
 """
 dot.node('q1', 'q1')
@@ -161,3 +187,105 @@ dot.node('q1', 'q1')
     #dot.edge('q2', 'q1', label='1')
     #dot.edge('q1', 'q1', label='x')
 """
+# Mostrar imagen en la interfaz gráfica
+def mostrar_imagen():
+    ruta_imagen = filedialog.askopenfilename(title="Selecciona la imagen", filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
+    if ruta_imagen:
+        img = Image.open('C:/cursoPythonudemy/automatas/output/automata.png')
+        img = img.resize((200, 200), Image.ANTIALIAS)
+        img_tk = ImageTk.PhotoImage(img)
+        imagen_label.config(image=img_tk)
+        imagen_label.image = img_tk
+
+# Función que muestra un mensaje en la interfaz
+def mostrar_mensaje():
+    messagebox.showinfo("Información", "Ejemplo de cómo puede ingresar las relaciones: q0-0-q1, q1-1-q0")
+
+"""
+# Función para mostrar el estado del Checkbutton
+def mostrar_estado():
+    estado = var.get()
+    if estado == 1:
+        etiqueta.config(text="Checkbutton está activado.")
+    else:
+        etiqueta.config(text="Checkbutton está desactivado.")
+"""
+
+# Crear ventana principal
+ventana = Tk()
+ventana.title("Automata con Tkinter")
+ventana.geometry("600x700")
+
+# Área de ingreso de estados
+estado_frame = LabelFrame(ventana, text="Agregar Estados", padx=10, pady=10)
+estado_frame.pack(padx=10, pady=10)
+
+estado_entry = Entry(estado_frame)
+estado_entry.grid(row=0, column=0, padx=10, pady=5)
+
+agregar_estado_btn = Button(estado_frame, text="Agregar Estado", command=crearAutomata)
+agregar_estado_btn.grid(row=0, column=1, padx=10)
+
+estado_listbox = Listbox(estado_frame)
+estado_listbox.grid(row=1, column=0, columnspan=2, pady=10)
+
+# Variable que guarda el estado del Checkbutton
+var = IntVar()
+
+# Crear el Checkbutton
+checkbutton = Checkbutton(estado_frame, text="Estado de aceptacion", variable=var)
+checkbutton.grid(row=0, column=2, padx=10)
+#checkbutton.pack()
+
+# Etiqueta para mostrar el estado
+etiqueta = Label(estado_frame, text="No se ha elegido ningun estado de aceptacion")
+etiqueta.grid(row=2, padx=10)
+#etiqueta.pack()
+
+
+
+# Área de ingreso de transiciones
+transicion_frame = LabelFrame(ventana, text="Agregar Transiciones", padx=10, pady=10)
+transicion_frame.pack(padx=10, pady=10)
+
+origen_label = Label(transicion_frame, text="Estado Origen:")
+origen_label.grid(row=0, column=0)
+origen_entry = Entry(transicion_frame)
+origen_entry.grid(row=0, column=1)
+
+simbolo_label = Label(transicion_frame, text="Símbolo:")
+simbolo_label.grid(row=1, column=0)
+simbolo_entry = Entry(transicion_frame)
+simbolo_entry.grid(row=1, column=1)
+
+destino_label = Label(transicion_frame, text="Estado Destino:")
+destino_label.grid(row=2, column=0)
+destino_entry = Entry(transicion_frame)
+destino_entry.grid(row=2, column=1)
+
+#agregar_transicion_btn = Button(transicion_frame, text="Agregar Transición", command=agregar_transicion)
+#agregar_transicion_btn.grid(row=3, column=0, columnspan=2, pady=10)
+
+transicion_listbox = Listbox(transicion_frame)
+transicion_listbox.grid(row=4, column=0, columnspan=2, pady=10)
+
+# Botón para mostrar mensajes especiales
+mensaje_frame = LabelFrame(ventana, text="Mensajes", padx=10, pady=10)
+mensaje_frame.pack(padx=10, pady=10)
+
+mensaje_btn = Button(mensaje_frame, text="Mostrar Mensaje", command=mostrar_mensaje)
+mensaje_btn.pack(pady=5)
+
+# Área para cargar y mostrar la imagen
+imagen_frame = LabelFrame(ventana, text="Visualizar Imagen", padx=10, pady=10)
+imagen_frame.pack(padx=10, pady=10)
+
+cargar_imagen_btn = Button(imagen_frame, text="Cargar Imagen", command=mostrar_imagen)
+cargar_imagen_btn.pack(pady=5)
+
+imagen_label = Label(imagen_frame)
+imagen_label.pack(pady=10)
+
+#Inicia la app
+ventana.mainloop()
+
