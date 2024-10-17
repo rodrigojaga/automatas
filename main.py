@@ -11,6 +11,7 @@ dot = Digraph(comment='AFD')
 cFI = cF.controllerFunction()
 con = ''
 estados = []
+transiciones = []
 
 def crearAutomata():
     #estados = []
@@ -39,10 +40,11 @@ def crearAutomata():
                     messagebox.showwarning('Estado existente', f'El estado {lsX[i]} ya ha sido ingresado')
                 else:
                     # Agregar el estado a la lista y al listbox
-                    estadoTemp = estado(lsX[i], False)
+                    estadoTemp = estado(lsX[i], False, False)
                     estados.append(estadoTemp)
                     estado_listbox.insert(END, lsX[i])
                     estadoDeAceptacionUnico(estadoTemp)
+                    estadoInicial(estadoTemp)
             estado_entry.delete(0, END)  # Limpiar la entrada
 
         else:
@@ -50,11 +52,12 @@ def crearAutomata():
             if x in [estado.nombreEstado for estado in estados]:
                 messagebox.showwarning('Estado existente', f'El estado {x} ya ha sido ingresado')
             else:
-                estadoNuevo = estado(x, False)
+                estadoNuevo = estado(x, False, False)
                 estados.append(estadoNuevo)
                 estado_listbox.insert(END, x)
                 estado_entry.delete(0, END)  # Limpiar la entrada
                 estadoDeAceptacionUnico(estadoNuevo)
+                estadoInicial(estadoNuevo)
 
 
     else:
@@ -81,11 +84,26 @@ def estadoDeAceptacionUnico(estadoAc: estado):
                 estados[i].isAceptacion = True
     else:
         etiqueta.config(text="No se ha elegido ningun estado de aceptacion")
+
+def estadoInicial(estadoAc: estado):
+    isAceptacion = bool(varInicio.get())
+    if isAceptacion:
+        etiquetaInicial.config(text=f"El estado {estadoAc.nombreEstado} es el estado inicial")
+        for i in range(len(estados)):
+            if estadoAc.nombreEstado == estados[i].nombreEstado:
+                estados[i].isInicio = True
+    else:
+        etiquetaInicial.config(text="No se ha elegido ningun estado Inicial")
+
 # Función que agrega los estados al autómata
 def cargarEstadosAutomata(estados: list):
     for estado in estados:
-        if estado.isAceptacion:
+        if estado.isAceptacion and not estado.isInicio:
             dot.node(estado.nombreEstado, estado.nombreEstado, style='filled', fillcolor='green', color='red')
+        elif estado.isInicio and not estado.isAceptacion:
+            dot.node(estado.nombreEstado, estado.nombreEstado, style='filled', fillcolor='lightblue', color='purple')
+        elif estado.isInicio and estado.isAceptacion:
+            dot.node(estado.nombreEstado, estado.nombreEstado, style='filled', fillcolor='lightblue', color='red')
         else:
             dot.node(estado.nombreEstado, estado.nombreEstado)
 
@@ -119,7 +137,7 @@ def indicarRelaciones():
         if '-' in x or ',' in x:  # Caso 1: múltiples transiciones separadas por guiones/comas
             # Separar por comas o guiones
             transiciones = x.split(',')
-            ingresarRelaciones(transiciones)
+            #ingresarRelaciones(transiciones)
         else:  # Caso 2: Ingreso secuencial
             estadoOrigen = x
             simbolo = input('Ingrese el símbolo de transición (1 carácter): ')
@@ -136,13 +154,46 @@ def indicarRelaciones():
 
     llamarImagen()
 
-def ingresarRelacionesS(estadoOrigen, simboloTransicion, estadoDestino):
-    # Cambiar el nombre de la variable 'transicion' a 'simboloTransicion'
-    transicionTemp = transicion(estadoOrigen, simboloTransicion, estadoDestino)
-    dot.edge(transicionTemp.estadoOrigen, transicionTemp.estadoDestino, label=transicionTemp.simboloTransicion)
+def ingresarRelacionesS():
+    origen = origen_entry.get().replace(' ', '')
+    simbolo = simbolo_entry.get().replace(' ', '')
+    destino = destino_entry.get().replace(' ', '')
+
+    if len(origen) > 0 and len(simbolo) == 1 and len(destino) > 0:
+        existeOrigen = False
+        existeDestino = False
+        for i in estados:
+            if origen == i.nombreEstado:
+                existeOrigen = True
+            elif destino == i.nombreEstado:
+                existeDestino = True
+            elif origen == destino:
+                existeOrigen = True
+                existeDestino = True
+
+        if existeOrigen and existeDestino:
+            transicionTmp = transicion(origen, simbolo, destino)
+            transiciones.append(transicionTmp)
+            dot.edge(transicionTmp.estadoOrigen, transicionTmp.estadoDestino, label=transicionTmp.simboloTransicion)
+            transicion_str = f'{origen} -> {simbolo} -> {destino}'
+            transicion_listbox.insert(END, transicion_str)
+            origen_entry.delete(0, END)
+            simbolo_entry.delete(0, END)
+            destino_entry.delete(0, END)
+        elif not existeOrigen:
+            messagebox.showerror("Error", "El estado origen no existe")
+        elif not existeDestino:
+            messagebox.showerror("Error", "El estado destino no existe")
+        else:
+            messagebox.showerror("Error", "Estados no existen")
+    else:
+        messagebox.showerror("Error", "Verifique que los datos estén correctos y completos.")
 
 
+
+"""
 def ingresarRelaciones(transiciones: list):
+    
     for trans in transiciones:
         partes = trans.split('-')
         if len(partes) == 3:
@@ -155,7 +206,7 @@ def ingresarRelaciones(transiciones: list):
         else:
             print(f"Error en la transición: {trans}")
 
-
+"""
 
 def llamarImagen():
     # Generar imagen después de cargar los estados
@@ -189,32 +240,20 @@ dot.node('q1', 'q1')
 """
 # Mostrar imagen en la interfaz gráfica
 def mostrar_imagen():
-    ruta_imagen = filedialog.askopenfilename(title="Selecciona la imagen", filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
-    if ruta_imagen:
-        img = Image.open('C:/cursoPythonudemy/automatas/output/automata.png')
-        img = img.resize((200, 200), Image.ANTIALIAS)
-        img_tk = ImageTk.PhotoImage(img)
-        imagen_label.config(image=img_tk)
-        imagen_label.image = img_tk
+    hacerImagen()
+    #ruta_imagen = filedialog.askopenfilename(title="Selecciona la imagen", filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
+    #if ruta_imagen:
+    img = Image.open('C:/cursoPythonudemy/automatas/output/automata.png')
+    img = img.resize((200, 200), Image.Resampling.LANCZOS)
+    img_tk = ImageTk.PhotoImage(img)
+    imagen_label.config(image=img_tk)
+    imagen_label.image = img_tk
 
-# Función que muestra un mensaje en la interfaz
-def mostrar_mensaje():
-    messagebox.showinfo("Información", "Ejemplo de cómo puede ingresar las relaciones: q0-0-q1, q1-1-q0")
-
-"""
-# Función para mostrar el estado del Checkbutton
-def mostrar_estado():
-    estado = var.get()
-    if estado == 1:
-        etiqueta.config(text="Checkbutton está activado.")
-    else:
-        etiqueta.config(text="Checkbutton está desactivado.")
-"""
 
 # Crear ventana principal
 ventana = Tk()
 ventana.title("Automata con Tkinter")
-ventana.geometry("600x700")
+ventana.geometry("800x650")
 
 # Área de ingreso de estados
 estado_frame = LabelFrame(ventana, text="Agregar Estados", padx=10, pady=10)
@@ -231,16 +270,25 @@ estado_listbox.grid(row=1, column=0, columnspan=2, pady=10)
 
 # Variable que guarda el estado del Checkbutton
 var = IntVar()
+varInicio = IntVar()
 
-# Crear el Checkbutton
+# Crear el Checkbutton para estados de aceptacion
 checkbutton = Checkbutton(estado_frame, text="Estado de aceptacion", variable=var)
 checkbutton.grid(row=0, column=2, padx=10)
 #checkbutton.pack()
+
+# Crear el Checkbutton para estados iniciales
+checkbutton = Checkbutton(estado_frame, text="Estado inicial", variable=varInicio)
+checkbutton.grid(row=0, column=3, padx=10)
 
 # Etiqueta para mostrar el estado
 etiqueta = Label(estado_frame, text="No se ha elegido ningun estado de aceptacion")
 etiqueta.grid(row=2, padx=10)
 #etiqueta.pack()
+
+# Etiqueta para mostrar el estado inicial
+etiquetaInicial = Label(estado_frame, text="No se ha elegido ningun estado inicial")
+etiquetaInicial.grid(row=3, padx=10)
 
 
 
@@ -249,43 +297,43 @@ transicion_frame = LabelFrame(ventana, text="Agregar Transiciones", padx=10, pad
 transicion_frame.pack(padx=10, pady=10)
 
 origen_label = Label(transicion_frame, text="Estado Origen:")
-origen_label.grid(row=0, column=0)
+origen_label.grid(row=0, column=0,sticky="nw")
 origen_entry = Entry(transicion_frame)
-origen_entry.grid(row=0, column=1)
+origen_entry.grid(row=0, column=1,sticky="nw")
 
 simbolo_label = Label(transicion_frame, text="Símbolo:")
-simbolo_label.grid(row=1, column=0)
+simbolo_label.grid(row=1, column=0,sticky="nw")
 simbolo_entry = Entry(transicion_frame)
-simbolo_entry.grid(row=1, column=1)
+simbolo_entry.grid(row=1, column=1,sticky="nw")
 
 destino_label = Label(transicion_frame, text="Estado Destino:")
-destino_label.grid(row=2, column=0)
+destino_label.grid(row=2, column=0,sticky="ew")
 destino_entry = Entry(transicion_frame)
-destino_entry.grid(row=2, column=1)
+destino_entry.grid(row=2, column=1,sticky="ew")
 
-#agregar_transicion_btn = Button(transicion_frame, text="Agregar Transición", command=agregar_transicion)
-#agregar_transicion_btn.grid(row=3, column=0, columnspan=2, pady=10)
+
+agregar_transicion_btn = Button(transicion_frame, text="Agregar Transición", command=ingresarRelacionesS)
+agregar_transicion_btn.grid(row=3, column=0, sticky="nw")
 
 transicion_listbox = Listbox(transicion_frame)
-transicion_listbox.grid(row=4, column=0, columnspan=2, pady=10)
-
-# Botón para mostrar mensajes especiales
-mensaje_frame = LabelFrame(ventana, text="Mensajes", padx=10, pady=10)
-mensaje_frame.pack(padx=10, pady=10)
-
-mensaje_btn = Button(mensaje_frame, text="Mostrar Mensaje", command=mostrar_mensaje)
-mensaje_btn.pack(pady=5)
+transicion_listbox.grid(row=4, column=0,sticky="nw")
 
 # Área para cargar y mostrar la imagen
-imagen_frame = LabelFrame(ventana, text="Visualizar Imagen", padx=10, pady=10)
-imagen_frame.pack(padx=10, pady=10)
+#imagen_frame = LabelFrame(ventana, text="Visualizar Imagen", padx=10, pady=10)
+#imagen_frame.grid(row=2,column=2)
+#imagen_frame.pack(padx=10, pady=10)
 
-cargar_imagen_btn = Button(imagen_frame, text="Cargar Imagen", command=mostrar_imagen)
-cargar_imagen_btn.pack(pady=5)
+cargar_imagen_btn = Button(transicion_frame, text="Cargar Imagen", command=mostrar_imagen)
+cargar_imagen_btn.grid(row=0,column=3) #pack(pady=5)
 
-imagen_label = Label(imagen_frame)
-imagen_label.pack(pady=10)
+imagen_labelIM = Label(transicion_frame, text='')
+imagen_labelIM.grid(row=5,column=2,padx=50,sticky="nwe") #pack(pady=10)
 
+imagen_label = Label(transicion_frame, text='Texto aqui')
+imagen_label.grid(row=1,column=3) #pack(pady=10)
+
+boton = Button(ventana, text="Mostrar imagen", command=llamarImagen)
+boton.pack(pady=10)
 #Inicia la app
 ventana.mainloop()
 
