@@ -5,6 +5,7 @@ class transicion:
         self.simboloTransicion = simboloTransicion
 
 class estado:
-    def __init__(self, nombreEstado, isAceptacion):
+    def __init__(self, nombreEstado, isAceptacion, isInicio):
         self.nombreEstado = nombreEstado
         self.isAceptacion = isAceptacion
+        self.isInicio = isInicio

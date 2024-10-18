@@ -1,10 +1,5 @@
 // AFD
 digraph {
 	q1 [label=q1]
-	q2 [label=q2]
-	q3 [label=q3]
-	q1 [label=q1]
-	q2 [label=q2]
-	q3 [label=q3]
-	q4 [label=q4 color=red fillcolor=green style=filled]
+	q1 -> q1 [label=1]
 }
