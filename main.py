@@ -2,7 +2,7 @@ from graphviz import Digraph
 import controllerFunction as cF
 from tkinter import *
 import tkinter as tk
-from clases import transicion, estado
+from clases import transicion, estado, automata
 from tkinter import messagebox, filedialog
 from PIL import Image, ImageTk
 import os
@@ -193,24 +193,6 @@ def ingresarRelacionesS():
         messagebox.showerror("Error", "Verifique que los datos estén correctos y completos.")
 
 
-"""
-def ingresarRelaciones(transiciones: list):
-
-    for trans in transiciones:
-        partes = trans.split('-')
-        if len(partes) == 3:
-            estadoOrigen = partes[0]
-            simboloTransicion = partes[1]  # Renombrar la variable 'transicion' a 'simboloTransicion'
-            estadoDestino = partes[2]
-            transicionTemp = transicion(estadoOrigen, simboloTransicion, estadoDestino)
-            #print(f"Transición agregada: {estado_origen} -> {simbolo} -> {estado_destino}")
-            dot.edge(transicionTemp.estadoOrigen, transicionTemp.estadoDestino, label=transicionTemp.simboloTransicion)
-        else:
-            print(f"Error en la transición: {trans}")
-
-"""
-
-
 def llamarImagen():
     # Generar imagen después de cargar los estados
     hacerImagen()
@@ -222,23 +204,112 @@ def llamarImagen():
 # Mostrar imagen en la interfaz gráfica
 def mostrar_imagen():
     hacerImagen()
-    # ruta_imagen = filedialog.askopenfilename(title="Selecciona la imagen", filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
-    # if ruta_imagen:
     img = Image.open('C:/cursoPythonudemy/automatas/output/automata.png')
     img = img.resize((200, 200), Image.Resampling.LANCZOS)
     img_tk = ImageTk.PhotoImage(img)
     imagen_label.config(image=img_tk)
     imagen_label.image = img_tk
 
+def limpiarTodo():
+    global estados, transiciones
+    estados.clear()
+    transiciones.clear()
+    messagebox.showinfo('Automata', cFI.borrarAutomata())
+    imagen_label.config(image='',text='Esperando...')
+    print(estados)
+    print(transiciones)
+    estado_listbox.delete(first=0,last=END)
+    transicion_listbox.delete(first=0,last=END)
+
+#Toma la cadena y la prueba en el automata
+def probarCadena():
+    cadena = entradaCadena.get().replace(' ', '')
+    if not cadena:
+        messagebox.showerror('Error', 'Debe ingresar una cadena')
+    else:
+        automata = crearAutomataObjeto()
+        if not automata.procesar_cadena(cadena):
+            messagebox.showinfo('Cadena', f'El automata ha rechazado la cadena {cadena}')
+        else:
+            messagebox.showinfo('Cadena', f'El automata ha aceptado la cadena {cadena}')
+
+#Funcion que crea el objeto automata
+def crearAutomataObjeto():
+    automataObj = automata(crearListaEstados(), crearAlfabeto(), crearTransiciones(), crearEstadoInicial(), crearEstadoAceptacion())
+    return automataObj
+
+
+#Funciones que sirven para definir un objeto 'automata'
+def crearListaEstados():
+    global estados
+    nEstados = []
+    if not estados:
+        messagebox.showerror('Lista Vacia', 'No se tiene ningun estado aun')
+        return nEstados  # Devuelve una lista vacía
+    else:
+        for estado in estados:
+            nEstados.append(estado.nombreEstado)
+        return nEstados
+
+def crearAlfabeto():
+    global transiciones
+    nAlfabeto = []
+    if not transiciones:
+        messagebox.showerror('Lista Vacia', 'No se tiene ninguna transicion aun')
+        return nAlfabeto  # Devuelve una lista vacía
+    else:
+        for simbolo in transiciones:
+            nAlfabeto.append(simbolo.simboloTransicion)
+        return nAlfabeto
+
+def crearEstadoAceptacion():
+    global estados
+    nEstadosAceptacion = []
+    if not estados:
+        messagebox.showerror('Lista Vacia', 'No se tiene ningun estado aun')
+        return nEstadosAceptacion  # Devuelve una lista vacía
+    else:
+        for estado in estados:
+            if estado.isAceptacion:
+                nEstadosAceptacion.append(estado.nombreEstado)
+        return nEstadosAceptacion
+
+def crearEstadoInicial():
+    global estados
+    q0 = ''
+    if not estados:
+        messagebox.showerror('Lista Vacia', 'No se tiene ningun estado aun')
+        return q0  # Devuelve un string vacío
+    else:
+        for estado in estados:
+            if estado.isInicio:
+                q0 = estado.nombreEstado
+                break
+        return q0
+
+def crearTransiciones():
+    global transiciones
+    transicionesDict = {}
+    if not transiciones:
+        messagebox.showerror('Lista Vacia', 'No se tiene ninguna transicion aun')
+        return transicionesDict  # Devuelve un diccionario vacío
+    else:
+        for transicion in transiciones:
+            clave = (transicion.estadoOrigen, transicion.simboloTransicion)
+            transicionesDict[clave] = transicion.estadoDestino
+        return transicionesDict  # Asegúrate de retornar el diccionario
+
 
 # Crear ventana principal
 ventana = Tk()
 ventana.title("Automata con Tkinter")
-ventana.geometry("800x650")
+ventana.geometry("1000x700")
 
+framePrincipal = LabelFrame(ventana, text='Crear Automata')
+framePrincipal.pack()
 # Área de ingreso de estados
-estado_frame = LabelFrame(ventana, text="Agregar Estados", padx=10, pady=10)
-estado_frame.pack(padx=10, pady=10)
+estado_frame = LabelFrame(framePrincipal, text="Agregar Estados", padx=10, pady=10)
+estado_frame.grid(row=0,column=0,padx=10, pady=10)
 
 estado_entry = Entry(estado_frame)
 estado_entry.grid(row=0, column=0, padx=10, pady=5)
@@ -272,8 +343,8 @@ etiquetaInicial = Label(estado_frame, text="No se ha elegido ningun estado inici
 etiquetaInicial.grid(row=3, padx=10)
 
 # Área de ingreso de transiciones
-transicion_frame = LabelFrame(ventana, text="Agregar Transiciones", padx=10, pady=10)
-transicion_frame.pack(padx=10, pady=10)
+transicion_frame = LabelFrame(framePrincipal, text="Agregar Transiciones", padx=10, pady=10)
+transicion_frame.grid(row=0,column=1,padx=10, pady=10)
 
 origen_label = Label(transicion_frame, text="Estado Origen:")
 origen_label.grid(row=0, column=0, sticky="nw")
@@ -297,20 +368,35 @@ transicion_listbox = Listbox(transicion_frame)
 transicion_listbox.grid(row=4, column=0, sticky="nw")
 
 # Área para cargar y mostrar la imagen
-# imagen_frame = LabelFrame(ventana, text="Visualizar Imagen", padx=10, pady=10)
-# imagen_frame.grid(row=2,column=2)
-# imagen_frame.pack(padx=10, pady=10)
 
-cargar_imagen_btn = Button(transicion_frame, text="Cargar Imagen", command=mostrar_imagen)
-cargar_imagen_btn.grid(row=0, column=3)  # pack(pady=5)
+frameSecundario = LabelFrame(ventana)
+frameSecundario.pack(pady=10)
 
-imagen_labelIM = Label(transicion_frame, text='')
-imagen_labelIM.grid(row=5, column=2, padx=50, sticky="nwe")  # pack(pady=10)
+cargar_imagen_btn = Button(frameSecundario, text="Cargar Imagen", command=mostrar_imagen)
+cargar_imagen_btn.grid(row=0, column=3,padx=10)  # pack(pady=5)
 
-imagen_label = Label(transicion_frame, text='Texto aqui')
-imagen_label.grid(row=1, column=3)  # pack(pady=10)
+imagen_labelIM = Label(frameSecundario, text='')
+imagen_labelIM.grid(row=1)  # pack(pady=10)
 
-boton = Button(ventana, text="Mostrar imagen", command=llamarImagen)
-boton.pack(pady=10)
+imagen_label = Label(frameSecundario, text='Esperando...')
+imagen_label.grid(row=1)  # pack(pady=10)
+
+extraFrame= LabelFrame(frameSecundario, text="Opciones adicionales", padx=10, pady=10)
+extraFrame.grid(row=0, column=0)
+boton = Button(extraFrame, text="Mostrar imagen", command=llamarImagen)
+boton.grid(row=0,pady=10, padx=10)
+
+botonLimpiar = Button(extraFrame, text="LIMPIAR TODO", command=limpiarTodo)
+botonLimpiar.grid(row=0, column=1,pady=10, padx=10)
+
+
+entradaLabel = Label(extraFrame, text='Ingresar Cadena de prueba')
+entradaLabel.grid(row=1,column=0)
+entradaCadena = Entry(extraFrame)
+entradaCadena.grid(row=1,column=1)
+botonProbarCadena = Button(extraFrame, text='Probar cadena en el automata', command=probarCadena)
+botonProbarCadena.grid(row=2)
+
+
 # Inicia la app
 ventana.mainloop()
