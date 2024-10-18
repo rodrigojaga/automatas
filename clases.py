@@ -24,5 +24,5 @@ class automata:
             if (estado_actual, simbolo) in self.transiciones:
                 estado_actual = self.transiciones[(estado_actual, simbolo)]
             else:
-                return False  # No hay transición válida, cadena no aceptada
+                return False
         return estado_actual in self.estados_aceptacion

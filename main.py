@@ -5,6 +5,7 @@ import tkinter as tk
 from clases import transicion, estado, automata
 from tkinter import messagebox, filedialog
 from PIL import Image, ImageTk
+from pdf.p import CrearPDF
 import os
 
 dot = Digraph(comment='AFD')
@@ -12,6 +13,7 @@ cFI = cF.controllerFunction()
 con = ''
 estados = []
 transiciones = []
+cadenasAceptadasAutomata = {}
 
 
 def crearAutomata():
@@ -223,15 +225,19 @@ def limpiarTodo():
 
 #Toma la cadena y la prueba en el automata
 def probarCadena():
+    global cadenasAceptadasAutomata
     cadena = entradaCadena.get().replace(' ', '')
     if not cadena:
         messagebox.showerror('Error', 'Debe ingresar una cadena')
     else:
         automata = crearAutomataObjeto()
         if not automata.procesar_cadena(cadena):
-            messagebox.showinfo('Cadena', f'El automata ha rechazado la cadena {cadena}')
+            messagebox.showinfo('Cadena', f'El automata ha RECHAZADO la cadena {cadena}')
+            cadenasAceptadasAutomata[cadena] = {False}
         else:
-            messagebox.showinfo('Cadena', f'El automata ha aceptado la cadena {cadena}')
+            messagebox.showinfo('Cadena', f'El automata ha ACEPTADO la cadena {cadena}')
+            cadenasAceptadasAutomata[cadena] = {True}
+
 
 #Funcion que crea el objeto automata
 def crearAutomataObjeto():
@@ -292,14 +298,28 @@ def crearTransiciones():
     transicionesDict = {}
     if not transiciones:
         messagebox.showerror('Lista Vacia', 'No se tiene ninguna transicion aun')
-        return transicionesDict  # Devuelve un diccionario vacío
+        return transicionesDict  # Diccionario vacío
     else:
         for transicion in transiciones:
             clave = (transicion.estadoOrigen, transicion.simboloTransicion)
             transicionesDict[clave] = transicion.estadoDestino
-        return transicionesDict  # Asegúrate de retornar el diccionario
+        return transicionesDict
 
 
+def exportarPDF():
+    global cadenasAceptadasAutomata
+    pdf = CrearPDF()
+    pdf.insertarEstados(crearListaEstados())
+    pdf.insertarAlfabeto(crearAlfabeto())
+    pdf.insertarEstadoInicial(crearEstadoInicial())
+    pdf.insertarEstadosAceptacion(crearEstadoAceptacion())
+    pdf.insertarTransiciones(crearTransiciones())
+    pdf.insertarImagen()
+    pdf.insertarCadenas(cadenasAceptadasAutomata)
+    pdf.crearPDFArchivo()
+
+    print(cadenasAceptadasAutomata)
+    messagebox.showinfo('PDF CREADO', 'El PDF ha sido creado')
 # Crear ventana principal
 ventana = Tk()
 ventana.title("Automata con Tkinter")
@@ -374,6 +394,9 @@ frameSecundario.pack(pady=10)
 
 cargar_imagen_btn = Button(frameSecundario, text="Cargar Imagen", command=mostrar_imagen)
 cargar_imagen_btn.grid(row=0, column=3,padx=10)  # pack(pady=5)
+
+pdfBtn = Button(frameSecundario, text="Exporta como PDF", command=exportarPDF)
+pdfBtn.grid(row=0, column=4,padx=10)  # pack(pady=5)
 
 imagen_labelIM = Label(frameSecundario, text='')
 imagen_labelIM.grid(row=1)  # pack(pady=10)
