@@ -35,30 +35,28 @@ def crearAutomata():
                 lsX = x.split('/')
             else:
                 messagebox.showwarning('Formato incorrecto', 'Ingrese un formato de separación aceptable (/ , -)')
-                return  # Sale si el formato no es válido
+                return 
 
-            for i in range(len(lsX)):
-                # Verificar si el estado ya está en la lista 'estados'
+            for i in range(len(lsX)):                
                 if lsX[i] in [estado.nombreEstado for estado in estados]:
                     messagebox.showwarning('Estado existente', f'El estado {lsX[i]} ya ha sido ingresado')
-                else:
-                    # Agregar el estado a la lista y al listbox
+                else:                    
                     estadoTemp = estado(lsX[i], False, False)
                     estados.append(estadoTemp)
                     estado_listbox.insert(END, lsX[i])
                     estadoDeAceptacionUnico(estadoTemp)
                     estadoInicial(estadoTemp)
-            estado_entry.delete(0, END)  # Limpiar la entrada
+            estado_entry.delete(0, END)
 
         else:
-            # Verificar si el estado corto ya está en la lista
+            
             if x in [estado.nombreEstado for estado in estados]:
                 messagebox.showwarning('Estado existente', f'El estado {x} ya ha sido ingresado')
             else:
                 estadoNuevo = estado(x, False, False)
                 estados.append(estadoNuevo)
                 estado_listbox.insert(END, x)
-                estado_entry.delete(0, END)  # Limpiar la entrada
+                estado_entry.delete(0, END)  
                 estadoDeAceptacionUnico(estadoNuevo)
                 estadoInicial(estadoNuevo)
 
@@ -99,7 +97,7 @@ def estadoInicial(estadoAc: estado):
         etiquetaInicial.config(text="No se ha elegido ningun estado Inicial")
 
 
-# Función que agrega los estados al autómata
+# Funcion que agrega los estados al automata
 def cargarEstadosAutomata(estados: list):
     for estado in estados:
         if estado.isAceptacion and not estado.isInicio:
@@ -112,51 +110,13 @@ def cargarEstadosAutomata(estados: list):
             dot.node(estado.nombreEstado, estado.nombreEstado)
 
 
-# Función para generar la imagen
+# Funcion para generar la imagen
 def hacerImagen():
-    dot.render('output/automata', format='png')  # Genera la imagen PNG
-    print(dot.source)  # Muestra el código fuente del gráfico
+    dot.render('output/automata', format='png')  
+    print(dot.source) 
 
 
-def indicarRelaciones():
-    print('Ahora definamos las relaciones entre estados')
-    # cFI.mostrarImagen() # Asegúrate de que este método esté definido si lo necesitas
-    con = ''
-    print("""
-        Ejemplo de cómo puede ingresar las relaciones. Siendo:
-            - q0 el estado de origen
-            - q1 el estado destino
-            - x el símbolo de transición (puede ser cualquier símbolo primitivo, a excepción de λ y ε)
-            q0 -> q1
-            Ingrese los valores separados por guiones o comas, al acabar con la transición puede utilizar un guion para definir otra relación:
-            Ejemplo de Caso 1: q0-0-q1, q1-1-q0, q3-0-q2
-            O puede ingresarlo de manera separada, siguiendo el orden de:
-            1. Ingresar el estado de origen
-            2. Ingresar el símbolo de transición
-            3. Ingresar el estado destino
-    """)
 
-    while con.lower() != 'no':
-        x = input('Ingrese la transición o las transiciones: ').replace(' ', '')  # Eliminar espacios en blanco
-        if '-' in x or ',' in x:  # Caso 1: múltiples transiciones separadas por guiones/comas
-            # Separar por comas o guiones
-            transiciones = x.split(',')
-            # ingresarRelaciones(transiciones)
-        else:  # Caso 2: Ingreso secuencial
-            estadoOrigen = x
-            simbolo = input('Ingrese el símbolo de transición (1 carácter): ')
-
-            while len(simbolo) != 1:
-                simbolo = input('Debe ingresar un símbolo de 1 carácter: ')
-
-            estadoDestino = input('Ingrese el estado destino: ').replace(' ', '')
-            # print(f"Transición agregada: {estado_origen} -> {simbolo} -> {estado_destino}")
-
-            ingresarRelacionesS(estadoOrigen, simbolo, estadoDestino)
-
-        con = input('¿Desea agregar otra transición? (Si/No)')
-
-    llamarImagen()
 
 
 def ingresarRelacionesS():
@@ -196,14 +156,14 @@ def ingresarRelacionesS():
 
 
 def llamarImagen():
-    # Generar imagen después de cargar los estados
+    
     hacerImagen()
     cFI.mostrarImagen()
 
 
 
 
-# Mostrar imagen en la interfaz gráfica
+# Mostrar imagen en la interfaz grafica
 def mostrar_imagen():
     hacerImagen()
     img = Image.open('C:/cursoPythonudemy/automatas/output/automata.png')
@@ -251,7 +211,7 @@ def crearListaEstados():
     nEstados = []
     if not estados:
         messagebox.showerror('Lista Vacia', 'No se tiene ningun estado aun')
-        return nEstados  # Devuelve una lista vacía
+        return nEstados  
     else:
         for estado in estados:
             nEstados.append(estado.nombreEstado)
@@ -262,7 +222,7 @@ def crearAlfabeto():
     nAlfabeto = []
     if not transiciones:
         messagebox.showerror('Lista Vacia', 'No se tiene ninguna transicion aun')
-        return nAlfabeto  # Devuelve una lista vacía
+        return nAlfabeto 
     else:
         for simbolo in transiciones:
             nAlfabeto.append(simbolo.simboloTransicion)
@@ -273,7 +233,7 @@ def crearEstadoAceptacion():
     nEstadosAceptacion = []
     if not estados:
         messagebox.showerror('Lista Vacia', 'No se tiene ningun estado aun')
-        return nEstadosAceptacion  # Devuelve una lista vacía
+        return nEstadosAceptacion  
     else:
         for estado in estados:
             if estado.isAceptacion:
@@ -285,7 +245,7 @@ def crearEstadoInicial():
     q0 = ''
     if not estados:
         messagebox.showerror('Lista Vacia', 'No se tiene ningun estado aun')
-        return q0  # Devuelve un string vacío
+        return q0  
     else:
         for estado in estados:
             if estado.isInicio:
@@ -298,7 +258,7 @@ def crearTransiciones():
     transicionesDict = {}
     if not transiciones:
         messagebox.showerror('Lista Vacia', 'No se tiene ninguna transicion aun')
-        return transicionesDict  # Diccionario vacío
+        return transicionesDict  
     else:
         for transicion in transiciones:
             clave = (transicion.estadoOrigen, transicion.simboloTransicion)
@@ -327,7 +287,7 @@ ventana.geometry("1000x700")
 
 framePrincipal = LabelFrame(ventana, text='Crear Automata')
 framePrincipal.pack()
-# Área de ingreso de estados
+# area de ingreso de estados
 estado_frame = LabelFrame(framePrincipal, text="Agregar Estados", padx=10, pady=10)
 estado_frame.grid(row=0,column=0,padx=10, pady=10)
 
@@ -362,7 +322,7 @@ etiqueta.grid(row=2, padx=10)
 etiquetaInicial = Label(estado_frame, text="No se ha elegido ningun estado inicial")
 etiquetaInicial.grid(row=3, padx=10)
 
-# Área de ingreso de transiciones
+# area de ingreso de transiciones
 transicion_frame = LabelFrame(framePrincipal, text="Agregar Transiciones", padx=10, pady=10)
 transicion_frame.grid(row=0,column=1,padx=10, pady=10)
 
@@ -387,7 +347,7 @@ agregar_transicion_btn.grid(row=3, column=0, sticky="nw")
 transicion_listbox = Listbox(transicion_frame)
 transicion_listbox.grid(row=4, column=0, sticky="nw")
 
-# Área para cargar y mostrar la imagen
+# area para cargar y mostrar la imagen
 
 frameSecundario = LabelFrame(ventana)
 frameSecundario.pack(pady=10)
