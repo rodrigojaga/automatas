@@ -7,7 +7,6 @@ class CrearPDF:
         self.linea = 15
         self.pdf.add_page()
 
-        # Dibujar un rectángulo alrededor de la página
         self.pdf.rect(x=10, y=10, w=190, h=277)
 
         self.pdf.set_font('Arial', '', 18)
@@ -20,7 +19,7 @@ class CrearPDF:
         self.pdf.set_font('Arial', 'UB', 18)
         self.pdf.text(x=78, y=self.linea, txt='Resolviendo un AFD')
 
-        # Imagen (logo)
+        #logo
         self.pdf.image('C:/cursoPythonudemy/automatas/pdf/logoU.png', x=170, y=11, w=30, h=30)
 
         self.pdf.set_font('Arial', '', 12)
