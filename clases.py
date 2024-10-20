@@ -14,7 +14,7 @@ class automata:
     def __init__(self, estados, alfabeto, transiciones, estado_inicial, estados_aceptacion):
         self.estados = estados  
         self.alfabeto = alfabeto  
-        self.transiciones = transiciones  # Diccionario de transiciones {(estado_actual, simbolo): estado_siguiente}
+        self.transiciones = transiciones  # Diccionario {(estado_actual, simbolo): estado_siguiente}
         self.estado_inicial = estado_inicial  
         self.estados_aceptacion = estados_aceptacion  
 
